@@ -18,6 +18,14 @@ model = whisper.load_model('small')
 ## FastAPI app 생성
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get('/')
 def index():
     return '환영합니다.'
@@ -66,7 +74,16 @@ async def create_subtitled_video(file: UploadFile = File(...)):
         print(f'3. [SRT 파일 생성] 완료 -> {srt_path}')
 
 
-    return "요청 처리됨"
+    return {
+        "srt": [
+            {
+                "index": i,
+                "start": format_time(seg['start']),
+                "end": format_time(seg['end']),
+                "text": seg['text'].strip()
+            } for i, seg in enumerate(segments, 1)
+        ]
+    }
 
 
 def format_time(seconds):
